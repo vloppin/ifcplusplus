@@ -27,8 +27,10 @@ FILE (GLOB ifc4_source "src/ifcpp/IFC4/lib/*.cpp")
 SET(IFCPP_SOURCE_FILES 
   src/ifcpp/IFC4/EntityFactory.cpp
   src/ifcpp/IFC4/TypeFactory.cpp
+  src/ifcpp/model/BuildingException.cpp
   src/ifcpp/model/BuildingModel.cpp
   src/ifcpp/model/UnitConverter.cpp
+  src/ifcpp/model/BuildingGuid.cpp
   src/ifcpp/reader/AbstractReader.cpp
   src/ifcpp/reader/ReaderSTEP.cpp
   src/ifcpp/reader/ReaderXML.cpp

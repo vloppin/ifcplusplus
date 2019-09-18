@@ -19,7 +19,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OU
 
 #include <exception>
 #include <string>
-#include "GlobalDefines.h"
 
 #define __FUNC__ __FUNCTION__
 #define _func_ __FUNCTION__
@@ -27,44 +26,17 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OU
 class BuildingException : public std::exception
 {
 public:
-	BuildingException( std::string reason )
-	{
-		m_reason_str = reason;
-	}
+	BuildingException(const std::string& reason);
 
-	BuildingException( std::string reason, const char* function_name )
-	{
-		m_reason_str.append(function_name);
-		if( !reason.empty() )
-		{
-			m_reason_str.append( ": " );
-			m_reason_str.append( reason );
-		}
-	}
+	BuildingException(const std::string& reason, const char* function_name);
 
-	BuildingException(std::wstring reason)
-	{
-		m_reason_str.assign(reason.begin(), reason.end());
-	}
+	BuildingException(const std::wstring& reason);
 
-	BuildingException(std::wstring reason, const char* function_name)
-	{
-		m_reason_str.append(function_name);
-		if( !reason.empty() )
-		{
-			m_reason_str.append( ": " );
-			std::string reason_str;
-			reason_str.assign( reason.begin(), reason.end() );
-			m_reason_str.append( reason_str );
-		}
-	}
+	BuildingException(const std::wstring& reason, const char* function_name);
 
 	~BuildingException() noexcept override = default;
 
-	const char* what() const noexcept override
-	{
-		return m_reason_str.c_str();
-	}
+	const char* what() const noexcept override;
 
 	std::string m_reason_str;
 };
@@ -72,23 +44,13 @@ public:
 class OutOfMemoryException : public std::exception
 {
 public:
-	OutOfMemoryException()
-	{
-		m_reason_str = "Out of memory";
-	}
+	OutOfMemoryException();
 
-	OutOfMemoryException( const char* function_name )
-	{
-		m_reason_str = "Out of memory in function: ";
-		m_reason_str.append( function_name );
-	}
+	OutOfMemoryException(const char* function_name);
 
 	~OutOfMemoryException() noexcept override = default;
 
-	const char* what() const noexcept override
-	{
-		return m_reason_str.c_str();
-	}
+	const char* what() const noexcept override;
 
 	std::string m_reason_str;
 };

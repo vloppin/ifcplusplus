@@ -20,17 +20,14 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OU
 #pragma warning ( disable: 4996 )  // for boost\random\detail\polynomial.hpp
 
 #include <algorithm>
-#include <locale>
 #include <string>
 #include <vector>
-#include <locale>
 #include <codecvt>
 #include <map>
 #include <iostream>
 #include <sstream>
 #include <string>
-#include <boost/optional.hpp>
-#include <boost/algorithm/string.hpp>
+#include <cwctype>
 #include "ifcpp/model/BasicTypes.h"
 #include "ifcpp/model/BuildingException.h"
 #include "ifcpp/model/BuildingObject.h"
@@ -76,6 +73,11 @@ inline std::string ws2s(const std::wstring& wstr)
 	return StringConverter.to_bytes(wstr);
 }
 
+inline bool std_iequal(const std::wstring& a, const std::wstring& b)
+{
+	return std::equal(a.begin(), a.end(), b.begin(), [](const wchar_t l, const wchar_t r) { return std::towupper(l) == std::towupper(r); });
+}
+
 inline void readIntegerValue( const std::wstring& str, int& int_value )
 {
 	if( str.compare( L"$" ) == 0 )
@@ -91,21 +93,7 @@ inline void readIntegerValue( const std::wstring& str, int& int_value )
 		int_value = std::stoi( str );
 	}
 }
-inline void readIntegerValue( const std::wstring& str, boost::optional<int>& int_value )
-{
-	if( str.compare( L"$" ) == 0 )
-	{
-		int_value = boost::none;
-	}
-	else if( str.compare( L"*" ) == 0 )
-	{
-		int_value = boost::none;
-	}
-	else
-	{
-		int_value = std::stoi( str );
-	}
-}
+
 inline void readRealValue( const std::wstring& str, double& real_value )
 {
 	if( str.compare( L"$" ) == 0 )
@@ -121,50 +109,41 @@ inline void readRealValue( const std::wstring& str, double& real_value )
 		real_value = std::stod( str );
 	}
 }
-inline void readRealValue( const std::wstring& str, boost::optional<double>& real_value )
-{
-	if( str.compare( L"$" ) == 0 )
-	{
-		real_value = boost::none;
-	}
-	else if( str.compare( L"*" ) == 0 )
-	{
-		real_value = boost::none;
-	}
-	else
-	{
-		real_value = std::stod( str );
-	}
-}
 
 void copyToEndOfStepString( char*& stream_pos, char*& stream_pos_source );
 IFCQUERY_EXPORT void decodeArgumentStrings( std::vector<std::string>& entity_arguments, std::vector<std::wstring>& args_out );
 
 inline void readBool( const std::wstring& attribute_value, bool& target )
 {
-	if( boost::iequals( attribute_value, L".F." ) )
+	if (attribute_value.size() >= 3 && attribute_value[0] == L'.' && attribute_value[2] == L'.')
 	{
-		target = false;
-	}
-	else if( boost::iequals( attribute_value, L".T." ) )
-	{
-		target = true;;
+		if (attribute_value[1] == L'T' || attribute_value[1] == L't')
+		{
+			target = true;
+		}
+		else if (attribute_value[1] == L'F' || attribute_value[1] == L'f')
+		{
+			target = false;
+		}
 	}
 }
 
 inline void readLogical( const std::wstring& attribute_value, LogicalEnum& target )
 {
-	if( boost::iequals(attribute_value, L".F." ) )
+	if (attribute_value.size() >= 3 && attribute_value[0] == L'.' && attribute_value[2] == L'.')
 	{
-		target = LOGICAL_FALSE;
-	}
-	else if( boost::iequals( attribute_value, L".T." ) )
-	{
-		target = LOGICAL_TRUE;
-	}
-	else if( boost::iequals( attribute_value, L".U." ) )
-	{
-		target = LOGICAL_UNKNOWN;;
+		if (attribute_value[1] == L'T' || attribute_value[1] == L't')
+		{
+			target = LOGICAL_TRUE;
+		}
+		else if (attribute_value[1] == L'F' || attribute_value[1] == L'f')
+		{
+			target = LOGICAL_FALSE;
+		}
+		else if (attribute_value[1] == L'U' || attribute_value[1] == L'u')
+		{
+			target = LOGICAL_UNKNOWN;;
+		}
 	}
 }
 
