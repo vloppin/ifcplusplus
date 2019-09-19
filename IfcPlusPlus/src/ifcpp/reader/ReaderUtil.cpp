@@ -17,9 +17,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OU
 
 #define _USE_MATH_DEFINES
 #include <cmath>
-#ifdef WIN32
-#include <windows.h>
-#endif
 
 #include <limits>
 

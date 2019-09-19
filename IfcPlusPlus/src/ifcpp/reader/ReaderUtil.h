@@ -22,7 +22,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OU
 #include <algorithm>
 #include <string>
 #include <vector>
-#include <codecvt>
 #include <map>
 #include <iostream>
 #include <sstream>
@@ -39,10 +38,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OU
 #pragma warning(disable : 4996)
 #endif
 
-void readBoolList( const std::wstring& str, std::vector<bool>& vec );
 void readIntegerList( const std::wstring& str, std::vector<int>& vec );
 void readIntegerList2D( const std::wstring& str, std::vector<std::vector<int> >& vec );
-void readIntegerList3D( const std::wstring& str, std::vector<std::vector<std::vector<int> > >& vec );
 void readRealList( const std::wstring& str, std::vector<double>& vec );
 void readRealList2D( const std::wstring& str, std::vector<std::vector<double> >& vec );
 void readRealList3D( const std::wstring& str, std::vector<std::vector<std::vector<double> > >& vec );
@@ -61,17 +58,6 @@ void findEndOfString(char*& stream_pos);
 void findEndOfWString(wchar_t*& stream_pos);
 void checkOpeningClosingParenthesis(const wchar_t* ch_check);
 
-inline std::wstring s2ws(const std::string& str)
-{
-	std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> StringConverter;
-	return StringConverter.from_bytes(str);
-}
-
-inline std::string ws2s(const std::wstring& wstr)
-{
-	std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> StringConverter;
-	return StringConverter.to_bytes(wstr);
-}
 
 inline bool std_iequal(const std::wstring& a, const std::wstring& b)
 {
@@ -557,40 +543,6 @@ void readEntityReference( const std::wstring& str, shared_ptr<T>& target, const 
 	}
 }
 
-template<typename T>
-void readTypeList( const std::wstring arg_complete, std::vector<shared_ptr<T> >& vec, const std::map<int,shared_ptr<BuildingEntity> >& map_entities )
-{
-	// example: (IFCPARAMETERVALUE(0.5),*,IFCPARAMETERVALUE(2.0))
-	wchar_t* pos_opening = nullptr;
-	wchar_t* pos_closing = nullptr;
-	wchar_t* ch = (wchar_t*)arg_complete.c_str();
-	findLeadingTrailingParanthesis( ch, pos_opening, pos_closing );
-	if( pos_opening == nullptr || pos_closing == nullptr )
-	{
-		if( arg_complete.compare(L"$") == 0 )
-		{
-			// empty list
-			return;
-		}
-		std::wstringstream err;
-		err << "num_opening != num_closing : " << arg_complete.c_str() << std::endl;
-		throw BuildingException( err.str(), __FUNC__ );
-	}
-	std::wstring arg( pos_opening+1, pos_closing-pos_opening-1 );
-	std::vector<std::wstring> list_items;
-	tokenizeList( arg, list_items );
-
-	for( size_t i=0; i<list_items.size(); ++i )
-	{
-		std::wstring& item = list_items[i];
-		shared_ptr<T> type_obj = T::createObjectFromSTEP( item, map_entities );
-		if( type_obj )
-		{
-			vec.push_back( type_obj );
-		}
-	}
-}
-
 template<typename select_t>
 void readSelectType( const std::wstring& item, shared_ptr<select_t>& result, const std::map<int, shared_ptr<BuildingEntity> >& map_entities )
 {
@@ -815,60 +767,6 @@ void readEntityReferenceList2D( const std::wstring& str, std::vector<std::vector
 	}
 	// no closing parenthesis found
 	std::wstringstream err;
-	err << "no closing parenthesis found: " << str << std::endl;
-	throw BuildingException( err.str(), __FUNC__ );
-}
-
-template<typename T>
-void readEntityReferenceList3D( const std::string& str, std::vector<std::vector<std::vector<shared_ptr<T> > > >& vec, const std::map<int,shared_ptr<BuildingEntity> >& map_entities )
-{
-	// example: (((#287,#291,#295,#299),(#287,#291,#295,#299)),((#287,#291,#295,#299),(#287,#291,#295,#299)))
-	const size_t argsize = str.size();
-	if( argsize < 8 )
-	{
-		return;
-	}
-	
-	int num_par_open = 0;
-	char* ch = (char*)str.c_str();
-	char* last_token = ch;
-
-	while( *ch != '\0' )
-	{
-		if( *ch == ')' )
-		{
-			--num_par_open;
-			if( num_par_open == 0 )
-			{
-				// last list
-				vec.resize(vec.size()+1);
-				std::string inner_argument( last_token, ch-last_token );
-				readEntityReferenceList2D( inner_argument, vec.back(), map_entities );
-				return;
-			}
-		}
-		else if( *ch == '(' )
-		{
-			++num_par_open;
-			if( num_par_open == 1 )
-			{
-				last_token = ch+1;
-			}
-		}
-		else if( *ch == ',' )
-		{
-			if( num_par_open == 1 )
-			{
-				vec.resize(vec.size()+1);
-				std::string inner_argument( last_token, ch-last_token );
-				readEntityReferenceList2D( inner_argument, vec.back(), map_entities );
-				last_token = ch+1;
-			}
-		}
-		++ch;
-	}
-	// no closing parenthesis found
-	std::stringstream err;
 	err << "no closing parenthesis found: " << str << std::endl;
 	throw BuildingException( err.str(), __FUNC__ );
 }
