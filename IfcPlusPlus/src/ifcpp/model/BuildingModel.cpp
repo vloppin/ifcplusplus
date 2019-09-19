@@ -18,10 +18,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OU
 #pragma warning( disable: 4996 )
 #include <iostream>
 #define BOOST_DATE_TIME_NO_LIB
-#include <boost/algorithm/string/replace.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/date_time/posix_time/posix_time_io.hpp>
 #include <memory>
+#include <locale>
+#include <iomanip>
 #include "ifcpp/IFC4/include/IfcLabel.h"
 #include "ifcpp/IFC4/include/IfcIdentifier.h"
 #include "ifcpp/IFC4/include/IfcUnitEnum.h"
@@ -476,12 +475,10 @@ void BuildingModel::initFileHeader( std::wstring file_name )
 	strs << "FILE_DESCRIPTION(('" << m_ifc_schema_version.m_IFC_FILE_SCHEMA << "'),'2;1');" << std::endl;
 	strs << "FILE_NAME('" << filename_escaped.c_str() << "','";
 
-	//2011-04-21T14:25:12
-	std::locale loc( std::wcout.getloc(), new boost::posix_time::wtime_facet( L"%Y-%m-%dT%H:%M:%S" ) );
 	std::basic_stringstream<wchar_t> wss;
-	wss.imbue( loc );
-	boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
-	wss << now;
+	std::time_t t = std::time(nullptr);
+	std::tm tm = *std::localtime(&t);
+	wss << std::put_time<wchar_t>(&tm, L"%Y-%m-%dT%H:%M:%S");
 	std::wstring ts = wss.str();
 
 	strs << ts;
